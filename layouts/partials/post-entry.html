@@ -1,0 +1,15 @@
+<div class="post-line">
+    <p class="line-date">{{ .Date | time.Format "2 Jan 2006" }} </p>
+
+    <div>
+        <p class="line-title">
+            <a href="{{ .RelPermalink }}">
+                {{ .Title }}
+            </a>
+        </p>
+
+        {{ if .Site.Params.listSummaries }}
+        <p class="line-summary"> {{ .Summary }} </p>
+        {{ end }}
+    </div>
+</div>

@@ -1,0 +1,10 @@
+:root {
+    --content-primary: rgb(36, 36, 36);
+    --content-secondary: rgb(117, 117, 117);
+    --accent-primary: rgb(154, 95, 69);
+    --accent-secondary: rgb(101, 62, 45);
+    --background: rgb(255, 255, 255);
+    --code-background: #f7f6f3;
+    --code-border: rgb(229, 229, 229);
+    --code-alt: rgb(117, 117, 117);
+}
