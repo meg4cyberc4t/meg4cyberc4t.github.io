@@ -1,0 +1,41 @@
+html,
+body {
+    max-width: 720px;
+    margin: auto;
+    font-family: 'Jetbrains Mono', 'Courier New';
+    font-size: 1.0em;
+    padding: 40px 20px;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+html {
+    display: block;
+}
+
+ol {
+    padding: 0;
+    margin: 0;
+}
+
+li {
+    padding-left: 6px;
+    margin-bottom: 5px;
+}
+
+a {
+    color: rgb(154, 95, 69);
+}
+
+
+.logo {
+    padding-left: 16px;
+    padding-bottom: 16px;
+}
+
+@media screen and (min-width: 720px) {
+    .logo {
+        float: right;
+        display: flex;
+    }
+}
