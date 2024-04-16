@@ -13,14 +13,25 @@ html {
     display: block;
 }
 
-ol {
+ol,
+ul {
     padding: 0;
     margin: 0;
+
 }
 
 li {
     padding-left: 6px;
     margin-bottom: 5px;
+}
+
+ul ul {
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+li li {
+    list-style-type: "—"
 }
 
 a {
