@@ -2,7 +2,7 @@ html,
 body {
     max-width: 720px;
     margin: auto;
-    font-family: 'Ubuntu', 'Jetbrains Mono', 'Courier New';
+    font-family: 'Jetbrains Mono', 'Courier New';
     font-size: 1.0em;
     padding: 40px 20px;
     -webkit-box-sizing: border-box;
