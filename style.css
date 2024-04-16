@@ -52,3 +52,10 @@ a {
         padding-bottom: 16px;
     }
 }
+
+.my-setup img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 600px;
+}
