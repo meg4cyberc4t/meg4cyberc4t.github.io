@@ -1,0 +1,20 @@
+title: Igor Molchanov
+author:
+  name: Igor Molchanov
+  email: molchanovia.dev@gmail.com
+
+theme: minima
+
+domain: molchanovia.dev
+url: https://molchanovia.dev
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+
+minima:
+  skin: classic
+
+sass:
+  sass_dir: _sass
+  style: compressed
