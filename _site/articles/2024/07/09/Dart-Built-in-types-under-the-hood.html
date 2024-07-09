@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang=" en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Dart: Built-in types under the hood | Igor Molchanov</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="Dart: Built-in types under the hood" />
+<meta name="author" content="Igor Molchanov" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="It was just a regular day of coding until I wondered: “How does a language like Dart manage to provide a single behavior for such a large number of target platforms?”. If you think about it that way, then you can compile your Dart code into binaries, executables, snapshots, interpret the code in JavaScript or WebAssembly, and eventually get the same behavior everywhere. “Is it true? There must be a lot of developer work behind this…” I thought and decided to figure it out." />
+<meta property="og:description" content="It was just a regular day of coding until I wondered: “How does a language like Dart manage to provide a single behavior for such a large number of target platforms?”. If you think about it that way, then you can compile your Dart code into binaries, executables, snapshots, interpret the code in JavaScript or WebAssembly, and eventually get the same behavior everywhere. “Is it true? There must be a lot of developer work behind this…” I thought and decided to figure it out." />
+<link rel="canonical" href="http://localhost:4000/articles/2024/07/09/Dart-Built-in-types-under-the-hood.html" />
+<meta property="og:url" content="http://localhost:4000/articles/2024/07/09/Dart-Built-in-types-under-the-hood.html" />
+<meta property="og:site_name" content="Igor Molchanov" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-07-09T16:50:25+03:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Dart: Built-in types under the hood" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Igor Molchanov"},"dateModified":"2024-07-09T16:50:25+03:00","datePublished":"2024-07-09T16:50:25+03:00","description":"It was just a regular day of coding until I wondered: “How does a language like Dart manage to provide a single behavior for such a large number of target platforms?”. If you think about it that way, then you can compile your Dart code into binaries, executables, snapshots, interpret the code in JavaScript or WebAssembly, and eventually get the same behavior everywhere. “Is it true? There must be a lot of developer work behind this…” I thought and decided to figure it out.","headline":"Dart: Built-in types under the hood","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/articles/2024/07/09/Dart-Built-in-types-under-the-hood.html"},"url":"http://localhost:4000/articles/2024/07/09/Dart-Built-in-types-under-the-hood.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css">
+  <link href="https://fonts.googleapis.com/css?family=JetBrains Mono" rel="stylesheet" /><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Igor Molchanov" />
+</head>
+<body><header class="site-header">
+
+</header><main class="page-content" aria-label="Content">
+    <div class="wrapper">
+      <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Dart: Built-in types under the hood</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2024-07-09T16:50:25+03:00" itemprop="datePublished">
+        Jul 9, 2024
+      </time>• 
+      <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-author h-card" itemprop="name">Igor Molchanov</span>
+      </span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>It was just a regular day of coding until I wondered: “How does a language like Dart manage to provide a single behavior for such a large number of target platforms?”. If you think about it that way, then you can compile your Dart code into binaries, executables, snapshots, interpret the code in JavaScript or WebAssembly, and eventually get the same behavior everywhere. “Is it true? There must be a lot of developer work behind this…” I thought and decided to figure it out.</p>
+
+<p>As an object of research, I decided to consider the work of built-in types.</p>
+
+<div style="text-align: center">
+  <img src=" /assets/images/articles/2024-07-09/cat_looks_under_the_hood.png" alt="The cat looks under the hood" width="320px" />
+</div>
+
+<h2 id="how-do-the-built-in-types-work">How do the built-in types work?</h2>
+
+<p>Built-in types are <code class="language-plaintext highlighter-rouge">bool</code>, <code class="language-plaintext highlighter-rouge">int</code>, <code class="language-plaintext highlighter-rouge">String</code> and others that we find in every programming language. I will not stop to explain each of them, for that you can refer to <a href="https://dart.dev/language/built-in-types">this documentation</a>.</p>
+
+<p>The general interface of these types are described in <code class="language-plaintext highlighter-rouge">dart:core</code>. This is one of the internal libraries of the SDK. <strong>It is automatically imported into each file.</strong></p>
+
+<p>However, if you pay attention to the class headers inside, you will notice that they only provide type signatures, but do not implement them.</p>
+
+<div class="language-dart highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">abstract</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">int</span> <span class="kd">extends</span> <span class="kt">num</span> <span class="p">{</span>
+  <span class="kd">external</span> <span class="kd">const</span> <span class="kd">factory</span> <span class="kt">int</span><span class="o">.</span><span class="na">fromEnvironment</span><span class="p">(</span><span class="kt">String</span> <span class="n">name</span><span class="p">,</span>
+      <span class="p">{</span><span class="kt">int</span> <span class="n">defaultValue</span> <span class="o">=</span> <span class="mi">0</span><span class="p">});</span>
+
+  <span class="kt">int</span> <span class="kd">operator</span> <span class="o">&amp;</span><span class="p">(</span><span class="kt">int</span> <span class="n">other</span><span class="p">);</span>
+
+  <span class="kt">int</span> <span class="n">modPow</span><span class="p">(</span><span class="kt">int</span> <span class="n">exponent</span><span class="p">,</span> <span class="kt">int</span> <span class="n">modulus</span><span class="p">);</span>
+  <span class="c1">// ...</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><em><a href="https://github.com/dart-lang/sdk/blob/b82383953d070e6aaad636413b9fcf06e385e985/sdk/lib/core/int.dart">sdk/lib/core/int.dart</a> - Int type abstraction</em></p>
+
+<div class="language-dart highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">abstract</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">String</span> <span class="kd">implements</span> <span class="kt">Comparable</span><span class="p">&lt;</span><span class="kt">String</span><span class="p">&gt;,</span> <span class="kt">Pattern</span> <span class="p">{</span>
+  <span class="kd">external</span> <span class="kd">factory</span> <span class="kt">String</span><span class="o">.</span><span class="na">fromCharCodes</span><span class="p">(</span><span class="n">Iterable</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">charCodes</span><span class="p">,</span>
+      <span class="p">[</span><span class="kt">int</span> <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="kt">int</span><span class="o">?</span> <span class="n">end</span><span class="p">]);</span>
+
+  <span class="kt">String</span> <span class="kd">operator</span> <span class="p">[](</span><span class="kt">int</span> <span class="n">index</span><span class="p">);</span>
+
+  <span class="kt">int</span> <span class="n">codeUnitAt</span><span class="p">(</span><span class="kt">int</span> <span class="n">index</span><span class="p">);</span>
+  <span class="c1">// ...</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><em><a href="https://github.com/dart-lang/sdk/blob/b82383953d070e6aaad636413b9fcf06e385e985/sdk/lib/core/string.dart">sdk/lib/core/string.dart</a> - String type abstraction</em></p>
+
+<p>This is done because the implementation of these types depends on the platform and its variant on which it will be compiled.</p>
+
+<p>When compiling your code to native (<a href="https://dart.dev/tools/dart-compile#exe">self-contained executables</a>, <a href="https://dart.dev/tools/dart-compile#jit-snapshot">JIT modules</a>), then under the hood you will use the Dart virtual machine (<a href="https://github.com/dart-lang/sdk/tree/main/runtime"><em>Dart VM</em></a>), but when building in the web, we will use the JavaScript interpretation instead. How do we specify the necessary implementation of our types without considering the nuances of the platform? For this purpose, there are <strong><em>patches</em></strong> available in the Dart language.</p>
+
+<p>Here’s how patches work:</p>
+
+<ul>
+  <li>
+    <p>There is a class that defines the interface for a type. For example, let’s look at <code class="language-plaintext highlighter-rouge">Null</code>:</p>
+
+    <div class="language-dart highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">/// The reserved word `null` denotes an object that is the sole instance of</span>
+<span class="c1">/// this class.</span>
+<span class="nd">@pragma</span><span class="p">(</span><span class="s">"vm:entry-point"</span><span class="p">)</span>
+<span class="kd">final</span> <span class="kd">class</span> <span class="nc">Null</span> <span class="p">{</span>
+  <span class="kd">factory</span> <span class="kt">Null</span><span class="o">.</span><span class="na">_uninstantiable</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">throw</span> <span class="n">UnsupportedError</span><span class="p">(</span><span class="s">'class Null cannot be instantiated'</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="kd">external</span> <span class="kt">int</span> <span class="kd">get</span> <span class="n">hashCode</span><span class="p">;</span>
+
+  <span class="c1">/// Returns the string `"null"`.</span>
+  <span class="kt">String</span> <span class="n">toString</span><span class="p">()</span> <span class="o">=</span><span class="p">&gt;</span> <span class="s">"null"</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>    </div>
+
+    <p><em><a href="https://github.com/dart-lang/sdk/blob/b82383953d070e6aaad636413b9fcf06e385e985/sdk/lib/core/null.dart#L23C1-L33">sdk/lib/core/null.dart</a></em></p>
+
+    <p>Those getters and constructors that will need a platform implementation are marked as <code class="language-plaintext highlighter-rouge">external</code>. This is how we will inform the compiler that the implementation of these things is located elsewhere.
+In our case, we will denote the <code class="language-plaintext highlighter-rouge">hashCode</code> as external for all patches for <code class="language-plaintext highlighter-rouge">Null</code>.</p>
+  </li>
+  <li>
+    <p>Here are patches for this class: files that implement the necessary implementation depending on the platform. You can find patches for <code class="language-plaintext highlighter-rouge">Null</code> inside the SDK in the following directories:</p>
+
+    <ul>
+      <li><a href="https://github.com/dart-lang/sdk/blob/main/sdk/lib/_internal/vm_shared/lib/null_patch.dart"><em>sdk/lib/_internal/vm_shared/lib/null_patch.dart</em></a></li>
+      <li><a href="https://github.com/dart-lang/sdk/blob/b82383953d070e6aaad636413b9fcf06e385e985/sdk/lib/_internal/js_dev_runtime/patch/core_patch.dart#L71-L75"><em>sdk/lib/_internal/js_dev_runtime/patch/core_patch.dart</em></a></li>
+      <li><a href="https://github.com/dart-lang/sdk/blob/b82383953d070e6aaad636413b9fcf06e385e985/sdk/lib/_internal/js_runtime/lib/core_patch.dart#L76-L80"><em>sdk/lib/_internal/js_runtime/patch/core_patch.dart</em></a></li>
+    </ul>
+
+    <p>Let’s take a look at one of them:</p>
+
+    <div class="language-dart highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file</span>
+<span class="c1">// for details. All rights reserved. Use of this source code is governed by a</span>
+<span class="c1">// BSD-style license that can be found in the LICENSE file.</span>
+
+<span class="kn">import</span> <span class="s">"dart:_internal"</span> <span class="kd">show</span> <span class="n">patch</span><span class="o">;</span>
+
+<span class="nd">@patch</span> <span class="c1">// &lt;--</span>
+<span class="nd">@pragma</span><span class="p">(</span><span class="s">'vm:deeply-immutable'</span><span class="p">)</span>
+<span class="nd">@pragma</span><span class="p">(</span><span class="s">"vm:entry-point"</span><span class="p">)</span>
+<span class="kd">class</span> <span class="nc">Null</span> <span class="p">{</span>
+  <span class="kd">static</span> <span class="kd">const</span> <span class="n">_HASH_CODE</span> <span class="o">=</span> <span class="mi">2011</span><span class="p">;</span> <span class="c1">// The year Dart was announced and a prime.</span>
+
+  <span class="nd">@patch</span> <span class="c1">// &lt;--</span>
+  <span class="kt">int</span> <span class="kd">get</span> <span class="n">hashCode</span> <span class="o">=</span><span class="p">&gt;</span> <span class="n">_HASH_CODE</span><span class="p">;</span>
+
+  <span class="kt">int</span> <span class="kd">get</span> <span class="n">_identityHashCode</span> <span class="o">=</span><span class="p">&gt;</span> <span class="n">_HASH_CODE</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>    </div>
+
+    <p><em><a href="https://github.com/dart-lang/sdk/blob/main/sdk/lib/_internal/vm_shared/lib/null_patch.dart">sdk/lib/_internal/vm_shared/lib/null_patch.dart</a> - patch for Dart VM.</em></p>
+
+    <p>A class with a platform implementation is a class of the same name as the main one, which is marked with the <code class="language-plaintext highlighter-rouge">@patch</code> annotation. These classes provide platform implementations. These implementations are also marked with the <code class="language-plaintext highlighter-rouge">@patch</code> annotation.</p>
+
+    <table>
+      <tbody>
+        <tr>
+          <td>💡 Patches cannot change the signature of methods or functions, only their implementation.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>The patch annotation is declared as follows:</p>
+
+    <div class="language-dart highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">part of</span> <span class="n">dart</span><span class="o">.</span><span class="na">_internal</span><span class="o">;</span>
+
+<span class="kd">class</span> <span class="nc">_Patch</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="n">_Patch</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="kd">const</span> <span class="n">_Patch</span> <span class="n">patch</span> <span class="o">=</span> <span class="kd">const</span> <span class="n">_Patch</span><span class="p">();</span>
+</code></pre></div>    </div>
+
+    <p><em><a href="https://github.com/dart-lang/sdk/blob/main/sdk/lib/internal/patch.dart">sdk/lib/internal/patch.dart</a> - patch annotation.</em></p>
+
+    <p>It is available in <code class="language-plaintext highlighter-rouge">dart:_internal</code>, an internal SDK package that is not available to the outside world. During the compilation process, we pass the path to the necessary patches to the compiler, which it combines with the main code.</p>
+
+    <div class="language-dart highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="p">(</span><span class="n">uri</span><span class="o">.</span><span class="na">isScheme</span><span class="p">(</span><span class="s">"dart"</span><span class="p">))</span> <span class="p">{</span>
+  <span class="n">target</span><span class="o">.</span><span class="na">readPatchFiles</span><span class="p">(</span><span class="n">libraryBuilder</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>    </div>
+
+    <p><em><a href="https://github.com/dart-lang/sdk/blob/ad5fa7f5e4b90cb13d4093aa10916211405a898a/pkg/front_end/lib/src/source/source_loader.dart#L540C4-L542C6">pkg/front_end/lib/src/source/source_loader.dart:540-542</a> - _createSourceCompilationUnit</em></p>
+
+    <div class="language-dart highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">readPatchFiles</span><span class="p">(</span><span class="n">SourceLibraryBuilder</span> <span class="n">libraryBuilder</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">assert</span><span class="p">(</span><span class="n">libraryBuilder</span><span class="o">.</span><span class="na">importUri</span><span class="o">.</span><span class="na">isScheme</span><span class="p">(</span><span class="s">"dart"</span><span class="p">));</span>
+  <span class="kt">List</span><span class="p">&lt;</span><span class="kt">Uri</span><span class="p">&gt;</span><span class="o">?</span> <span class="n">patches</span> <span class="o">=</span>
+      <span class="n">uriTranslator</span><span class="o">.</span><span class="na">getDartPatches</span><span class="p">(</span><span class="n">libraryBuilder</span><span class="o">.</span><span class="na">importUri</span><span class="o">.</span><span class="na">path</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">patches</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">Uri</span> <span class="n">patch</span> <span class="k">in</span> <span class="n">patches</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">libraryBuilder</span><span class="o">.</span><span class="na">loader</span><span class="o">.</span><span class="na">read</span><span class="p">(</span><span class="n">patch</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+          <span class="nl">fileUri:</span> <span class="n">patch</span><span class="p">,</span>
+          <span class="nl">origin:</span> <span class="n">libraryBuilder</span><span class="p">,</span>
+          <span class="nl">accessor:</span> <span class="n">libraryBuilder</span><span class="o">.</span><span class="na">compilationUnit</span><span class="p">,</span>
+          <span class="nl">isPatch:</span> <span class="kc">true</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>    </div>
+
+    <p><em><a href="https://github.com/dart-lang/sdk/blob/ad5fa7f5e4b90cb13d4093aa10916211405a898a/pkg/front_end/lib/src/kernel/kernel_target.dart#L1811C2-L1825C1">pkg/front_end/lib/src/kernel/kernel_target.dart:1811-1824</a> - readPatchFiles</em></p>
+  </li>
+  <li>
+    <p>In order for the language to identify necessary patches, these patches need to be described in the <code class="language-plaintext highlighter-rouge">libraries.yaml</code> file inside SDK (and the <code class="language-plaintext highlighter-rouge">libraries.json</code> file which is generated from it). For example, this is how patches for the <code class="language-plaintext highlighter-rouge">dart:core</code> library, which is used to build code with VM, declared:</p>
+
+    <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">vm_common</span><span class="pi">:</span>
+  <span class="na">libraries</span><span class="pi">:</span>
+    <span class="na">core</span><span class="pi">:</span>
+      <span class="na">uri</span><span class="pi">:</span> <span class="s2">"</span><span class="s">core/core.dart"</span>
+      <span class="na">patches</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="s2">"</span><span class="s">_internal/vm/lib/core_patch.dart"</span>
+        <span class="pi">-</span> <span class="s2">"</span><span class="s">_internal/vm_shared/lib/array_patch.dart"</span>
+        <span class="pi">-</span> <span class="s2">"</span><span class="s">_internal/vm_shared/lib/bigint_patch.dart"</span>
+        <span class="pi">-</span> <span class="s2">"</span><span class="s">_internal/vm_shared/lib/bool_patch.dart"</span>
+        <span class="pi">-</span> <span class="s2">"</span><span class="s">_internal/vm_shared/lib/date_patch.dart"</span>
+        <span class="pi">-</span> <span class="s2">"</span><span class="s">_internal/vm_shared/lib/integers_patch.dart"</span>
+        <span class="pi">-</span> <span class="s2">"</span><span class="s">_internal/vm_shared/lib/map_patch.dart"</span>
+        <span class="pi">-</span> <span class="s2">"</span><span class="s">_internal/vm_shared/lib/null_patch.dart"</span>
+        <span class="pi">-</span> <span class="s2">"</span><span class="s">_internal/vm_shared/lib/string_buffer_patch.dart"</span>
+
+<span class="na">vm</span><span class="pi">:</span>
+  <span class="na">include</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">target</span><span class="pi">:</span> <span class="s2">"</span><span class="s">vm_common"</span>
+  <span class="na">libraries</span><span class="pi">:</span>
+    <span class="na">cli</span><span class="pi">:</span>
+      <span class="na">uri</span><span class="pi">:</span> <span class="s2">"</span><span class="s">cli/cli.dart"</span>
+</code></pre></div>    </div>
+
+    <p><em><a href="https://github.com/dart-lang/sdk/blob/main/sdk/lib/libraries.yaml">sdk/lib/libraries.yaml</a></em></p>
+
+    <p>The <code class="language-plaintext highlighter-rouge">libraries.json</code> is the basis (<a href="https://github.com/dart-lang/sdk/issues/28836#issuecomment-401180706">not counting the analyzer</a>) for specifying packages and patches for each target platform. When running <code class="language-plaintext highlighter-rouge">dart run</code> or <code class="language-plaintext highlighter-rouge">dart compile</code>, the platform accesses it to find the necessary information and then collects the “patched” code automatically in build.</p>
+
+    <p>💡 When compiling your code, you can get information about an internal package that has been included. This is done using <code class="language-plaintext highlighter-rouge">bool.fromEnvironment('dart.library.name')</code> where <strong><em>name</em></strong> is the package name.
+This is how global web constants are obtained:</p>
+    <div class="language-dart highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="kd">const</span> <span class="kt">bool</span> <span class="n">kIsWeb</span> <span class="o">=</span> <span class="kt">bool</span><span class="o">.</span><span class="na">fromEnvironment</span><span class="p">(</span><span class="s">'dart.library.js_util'</span><span class="p">);</span>
+ <span class="kd">const</span> <span class="kt">bool</span> <span class="n">kIsWasm</span> <span class="o">=</span> <span class="n">kIsWeb</span> <span class="o">&amp;&amp;</span> <span class="kt">bool</span><span class="o">.</span><span class="na">fromEnvironment</span><span class="p">(</span><span class="s">'dart.library.ffi'</span><span class="p">);</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Finally, during the build to a target platform, the built-in types are assembled exclusively with their implementation for that platform 🙂.</p>
+  </li>
+</ul>
+
+<h2 id="built-in-types-on-platforms-web">Built-in types on platforms: Web</h2>
+
+<p>An important detail to keep in mind, if we are talking about web, is that Dart <em>interprets</em> code in JavaScript or WebAssembly. Using built-in types means using the types of these languages. And in many ways they match, but there are a couple of limitations.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Dart type</th>
+      <th>JavaScript type</th>
+      <th>WebAssembly type</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>int</td>
+      <td>number</td>
+      <td>i32, i64</td>
+    </tr>
+    <tr>
+      <td>double</td>
+      <td>number</td>
+      <td>f32, f64</td>
+    </tr>
+    <tr>
+      <td>String</td>
+      <td>string</td>
+      <td>i8 array, i16 array</td>
+    </tr>
+    <tr>
+      <td>bool</td>
+      <td>boolean</td>
+      <td>i32</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>When compiling to JavaScript, integers are restricted to values that can be represented exactly by double-precision floating point values. The available integer values include all integers between -(2^53) and 2^53, and some integers with larger magnitude. That includes some integers larger than 2^63.
+The behavior of the operators and methods in the <code class="language-plaintext highlighter-rouge">int</code> class therefore sometimes differs between the Dart VM and Dart code compiled to JavaScript. For example, the bitwise operators truncate their operands to 32-bit integers when compiled to JavaScript.</p>
+
+<div class="language-dart highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">a</span> <span class="o">=</span> <span class="mh">0xFFFFFFFF</span> <span class="o">+</span> <span class="mi">3</span><span class="p">;</span>
+<span class="n">print</span><span class="p">(</span><span class="n">a</span><span class="p">);</span> <span class="c1">// Dart VM: 4294967295</span>
+<span class="n">print</span><span class="p">(</span><span class="n">a</span><span class="p">);</span> <span class="c1">// JavaScript: 4294967298</span>
+
+<span class="kt">int</span> <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="p">&gt;&gt;</span> <span class="mi">2</span><span class="p">;</span>
+<span class="n">print</span><span class="p">(</span><span class="n">c</span><span class="p">);</span> <span class="c1">// Dart VM: 1073741823</span>
+<span class="n">print</span><span class="p">(</span><span class="n">c</span><span class="p">);</span> <span class="c1">// JavaScript: 0</span>
+</code></pre></div></div>
+
+<p>WebAssembly has also received special attention because it can invoke JavaScript to execute code. That’s why in <code class="language-plaintext highlighter-rouge">libraries.json</code> you can see <code class="language-plaintext highlighter-rouge">wasm</code>, <code class="language-plaintext highlighter-rouge">wasm_js_compatibility</code> and <code class="language-plaintext highlighter-rouge">wasm_common</code> targets. The latter is used to specify common patches.</p>
+
+<p><a href="https://api.dart.dev/stable/3.4.4/dart-js_interop/dart-js_interop-library.html">The JS compatibility</a> and <a href="https://dart.dev/interop/js-interop#next-generation-js-interop">static next-generation JS interop</a> allows you to access the browser’s API from Dart code compiled to WebAssembly (<a href="https://pub.dev/packages/web"><code class="language-plaintext highlighter-rouge">package:web</code></a>).</p>
+
+<h2 id="built-in-types-on-platforms-dart-vm">Built-in types on platforms: Dart VM</h2>
+
+<p>When compiling the code for Dart VM, note that each built-in type described in Dart is represented in C++. For example, this is how the representation of the <code class="language-plaintext highlighter-rouge">bool</code> type looks like:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Class Bool implements Dart core class bool.</span>
+<span class="k">class</span> <span class="nc">Bool</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Instance</span> <span class="p">{</span>
+ <span class="nl">public:</span>
+  <span class="kt">bool</span> <span class="n">value</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">untag</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">value_</span><span class="p">;</span> <span class="p">}</span>
+
+  <span class="k">static</span> <span class="kt">intptr_t</span> <span class="nf">InstanceSize</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">RoundedAllocationSize</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">UntaggedBool</span><span class="p">));</span>
+  <span class="p">}</span>
+
+  <span class="k">static</span> <span class="k">const</span> <span class="n">Bool</span><span class="o">&amp;</span> <span class="n">True</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n">Object</span><span class="o">::</span><span class="n">bool_true</span><span class="p">();</span> <span class="p">}</span>
+
+  <span class="k">static</span> <span class="k">const</span> <span class="n">Bool</span><span class="o">&amp;</span> <span class="n">False</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n">Object</span><span class="o">::</span><span class="n">bool_false</span><span class="p">();</span> <span class="p">}</span>
+
+  <span class="k">static</span> <span class="k">const</span> <span class="n">Bool</span><span class="o">&amp;</span> <span class="n">Get</span><span class="p">(</span><span class="kt">bool</span> <span class="n">value</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">value</span> <span class="o">?</span> <span class="n">Bool</span><span class="o">::</span><span class="n">True</span><span class="p">()</span> <span class="o">:</span> <span class="n">Bool</span><span class="o">::</span><span class="n">False</span><span class="p">();</span>
+  <span class="p">}</span>
+
+  <span class="k">virtual</span> <span class="kt">uint32_t</span> <span class="n">CanonicalizeHash</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">ptr</span><span class="p">()</span> <span class="o">==</span> <span class="n">True</span><span class="p">().</span><span class="n">ptr</span><span class="p">()</span> <span class="o">?</span> <span class="n">kTrueIdentityHash</span> <span class="o">:</span> <span class="n">kFalseIdentityHash</span><span class="p">;</span>
+  <span class="p">}</span>
+
+ <span class="k">private</span><span class="o">:</span>
+  <span class="n">FINAL_HEAP_OBJECT_IMPLEMENTATION</span><span class="p">(</span><span class="n">Bool</span><span class="p">,</span> <span class="n">Instance</span><span class="p">);</span>
+  <span class="k">friend</span> <span class="k">class</span> <span class="nc">Class</span><span class="p">;</span>
+  <span class="k">friend</span> <span class="k">class</span> <span class="nc">Object</span><span class="p">;</span>  <span class="c1">// To initialize the true and false values.</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p><a href="https://github.com/dart-lang/sdk/blob/b82383953d070e6aaad636413b9fcf06e385e985/runtime/vm/object.h#L10797"><em>runtime/vm/object.h::Bool</em></a></p>
+
+<p>Most of the values will be stored in the garbage-collected heap. Thanks to this, Dart developers do not have to worry about manually allocating and freeing memory.</p>
+
+<p>Values such as <code class="language-plaintext highlighter-rouge">true</code>, <code class="language-plaintext highlighter-rouge">false</code>, and <code class="language-plaintext highlighter-rouge">null</code> will be considered immutable and will be automatically added to heap. This is done so that subsequent uses of bools do not take up more memory, but access already existing values. They are all allocated in the non-GC’d <a href="https://github.com/dart-lang/sdk/blob/87676264371a01e83b7899d01b853306828af758/runtime/vm/dart.cc#L63C16-L63C27"><code class="language-plaintext highlighter-rouge">Dart::vm_isolate_</code></a>.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Allocate and initialize the null instance.</span>
+<span class="c1">// 'null_' must be the first object allocated as it is used in allocation to</span>
+<span class="c1">// clear the pointer fields of objects.</span>
+<span class="p">{</span>
+  <span class="n">uword</span> <span class="n">address</span> <span class="o">=</span>
+      <span class="n">heap</span><span class="o">-&gt;</span><span class="n">Allocate</span><span class="p">(</span><span class="kr">thread</span><span class="p">,</span> <span class="n">Instance</span><span class="o">::</span><span class="n">InstanceSize</span><span class="p">(),</span> <span class="n">Heap</span><span class="o">::</span><span class="n">kOld</span><span class="p">);</span>
+  <span class="n">null_</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">InstancePtr</span><span class="o">&gt;</span><span class="p">(</span><span class="n">address</span> <span class="o">+</span> <span class="n">kHeapObjectTag</span><span class="p">);</span>
+  <span class="n">InitializeObjectVariant</span><span class="o">&lt;</span><span class="n">Instance</span><span class="o">&gt;</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">kNullCid</span><span class="p">);</span>
+  <span class="n">null_</span><span class="o">-&gt;</span><span class="n">untag</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">SetCanonical</span><span class="p">();</span>
+<span class="p">}</span>
+<span class="c1">// ...</span>
+<span class="p">{</span>
+  <span class="c1">// Allocate true.</span>
+  <span class="n">uword</span> <span class="n">address</span> <span class="o">=</span> <span class="n">heap</span><span class="o">-&gt;</span><span class="n">Allocate</span><span class="p">(</span><span class="kr">thread</span><span class="p">,</span> <span class="n">Bool</span><span class="o">::</span><span class="n">InstanceSize</span><span class="p">(),</span> <span class="n">Heap</span><span class="o">::</span><span class="n">kOld</span><span class="p">);</span>
+  <span class="n">true_</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">BoolPtr</span><span class="o">&gt;</span><span class="p">(</span><span class="n">address</span> <span class="o">+</span> <span class="n">kHeapObjectTag</span><span class="p">);</span>
+  <span class="n">InitializeObject</span><span class="o">&lt;</span><span class="n">Bool</span><span class="o">&gt;</span><span class="p">(</span><span class="n">address</span><span class="p">);</span>
+  <span class="n">true_</span><span class="o">-&gt;</span><span class="n">untag</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">value_</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+  <span class="n">true_</span><span class="o">-&gt;</span><span class="n">untag</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">SetCanonical</span><span class="p">();</span>
+<span class="p">}</span>
+<span class="p">{</span>
+  <span class="c1">// Allocate false.</span>
+  <span class="n">uword</span> <span class="n">address</span> <span class="o">=</span> <span class="n">heap</span><span class="o">-&gt;</span><span class="n">Allocate</span><span class="p">(</span><span class="kr">thread</span><span class="p">,</span> <span class="n">Bool</span><span class="o">::</span><span class="n">InstanceSize</span><span class="p">(),</span> <span class="n">Heap</span><span class="o">::</span><span class="n">kOld</span><span class="p">);</span>
+  <span class="n">false_</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">BoolPtr</span><span class="o">&gt;</span><span class="p">(</span><span class="n">address</span> <span class="o">+</span> <span class="n">kHeapObjectTag</span><span class="p">);</span>
+  <span class="n">InitializeObject</span><span class="o">&lt;</span><span class="n">Bool</span><span class="o">&gt;</span><span class="p">(</span><span class="n">address</span><span class="p">);</span>
+  <span class="n">false_</span><span class="o">-&gt;</span><span class="n">untag</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">value_</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+  <span class="n">false_</span><span class="o">-&gt;</span><span class="n">untag</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">SetCanonical</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><a href="https://github.com/dart-lang/sdk/blob/b82383953d070e6aaad636413b9fcf06e385e985/runtime/vm/object.cc#L563-L599"><em>runtime/vm/object.cc::InitNullAndBool</em></a></p>
+
+<p>By the way, in patches for a virtual machine, you will often see a special pragma <code class="language-plaintext highlighter-rouge">"vm:external-name"</code>. The implementation of such methods can be found in the code of the VM.</p>
+
+<div class="language-dart highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@patch</span>
+<span class="nd">@pragma</span><span class="p">(</span><span class="s">'vm:deeply-immutable'</span><span class="p">)</span>
+<span class="nd">@pragma</span><span class="p">(</span><span class="s">"vm:entry-point"</span><span class="p">)</span>
+<span class="kd">class</span> <span class="nc">bool</span> <span class="p">{</span>
+  <span class="nd">@patch</span>
+  <span class="nd">@pragma</span><span class="p">(</span><span class="s">"vm:external-name"</span><span class="p">,</span> <span class="s">"Bool_fromEnvironment"</span><span class="p">)</span>
+  <span class="kd">external</span> <span class="kd">const</span> <span class="kd">factory</span> <span class="kt">bool</span><span class="o">.</span><span class="na">fromEnvironment</span><span class="p">(</span><span class="kt">String</span> <span class="n">name</span><span class="p">,</span>
+      <span class="p">{</span><span class="kt">bool</span> <span class="n">defaultValue</span> <span class="o">=</span> <span class="kc">false</span><span class="p">});</span>
+  <span class="c1">// ...</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><a href="https://github.com/dart-lang/sdk/blob/b82383953d070e6aaad636413b9fcf06e385e985/sdk/lib/_internal/vm_shared/lib/bool_patch.dart#L7-L16"><em>sdk/lib/_internal/vm_shared/lib/bool_patch.dart</em></a></p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">DEFINE_NATIVE_ENTRY</span><span class="p">(</span><span class="n">Bool_fromEnvironment</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">GET_NON_NULL_NATIVE_ARGUMENT</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">arguments</span><span class="o">-&gt;</span><span class="n">NativeArgAt</span><span class="p">(</span><span class="mi">1</span><span class="p">));</span>
+  <span class="n">GET_NATIVE_ARGUMENT</span><span class="p">(</span><span class="n">Bool</span><span class="p">,</span> <span class="n">default_value</span><span class="p">,</span> <span class="n">arguments</span><span class="o">-&gt;</span><span class="n">NativeArgAt</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
+  <span class="c1">// Call the embedder to supply us with the environment.</span>
+  <span class="k">const</span> <span class="n">String</span><span class="o">&amp;</span> <span class="n">env_value</span> <span class="o">=</span>
+      <span class="n">String</span><span class="o">::</span><span class="n">Handle</span><span class="p">(</span><span class="n">Api</span><span class="o">::</span><span class="n">GetEnvironmentValue</span><span class="p">(</span><span class="kr">thread</span><span class="p">,</span> <span class="n">name</span><span class="p">));</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">env_value</span><span class="p">.</span><span class="n">IsNull</span><span class="p">())</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">Symbols</span><span class="o">::</span><span class="n">True</span><span class="p">().</span><span class="n">Equals</span><span class="p">(</span><span class="n">env_value</span><span class="p">))</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">Bool</span><span class="o">::</span><span class="n">True</span><span class="p">().</span><span class="n">ptr</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">Symbols</span><span class="o">::</span><span class="n">False</span><span class="p">().</span><span class="n">Equals</span><span class="p">(</span><span class="n">env_value</span><span class="p">))</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">Bool</span><span class="o">::</span><span class="n">False</span><span class="p">().</span><span class="n">ptr</span><span class="p">();</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="n">default_value</span><span class="p">.</span><span class="n">ptr</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><a href="https://github.com/dart-lang/sdk/blob/b82383953d070e6aaad636413b9fcf06e385e985/runtime/lib/bool.cc#L19-L34"><em>runtime/lib/bool.cc</em></a></p>
+
+<table>
+  <tbody>
+    <tr>
+      <td>💡 You can read more about the pragmas for VM <a href="https://github.com/dart-lang/sdk/blob/b82383953d070e6aaad636413b9fcf06e385e985/runtime/docs/pragmas.md">here</a>.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong><em>Numbers</em></strong></p>
+
+<p><code class="language-plaintext highlighter-rouge">Int</code> type has two variations: small integer (<a href="https://github.com/dart-lang/sdk/blob/e4e06c6cbd3aedc57148384592783f39c8edfd30/runtime/vm/object.h#L9992"><strong><code class="language-plaintext highlighter-rouge">Smi</code></strong></a>) and middle integer (<a href="https://github.com/dart-lang/sdk/blob/e4e06c6cbd3aedc57148384592783f39c8edfd30/runtime/vm/object.h#L10073"><strong><code class="language-plaintext highlighter-rouge">Mint</code></strong></a>).</p>
+
+<p>Small integer value range is from -(2^N) to 2^N-1 where N = 30 (32-bit build) or N = 62 (64-bit build). Dart uses <code class="language-plaintext highlighter-rouge">Smi</code> to represent some internal properties of objects, such as the length of lists.</p>
+
+<p>Middle integer value range is from -2^63 to (2^63)-1.</p>
+
+<p>When you write a number into a variable or interact with it, Dart selects a type of that number. If you go beyond the <code class="language-plaintext highlighter-rouge">Smi</code> size, it automatically converts the type to <code class="language-plaintext highlighter-rouge">Mint</code>.</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td>💡 (2^63)-1 = 9,223,372,036,854,775,807</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>If the dimension of this number is not enough for you, you can use the built-in complex <code class="language-plaintext highlighter-rouge">BigInt</code> type.
+The number in BigInt is represented internally by a sign, an array of 32-bit unsigned integers in little-endian format, and a number of used digits in that array.</p>
+
+<div class="language-dart highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">BigInt</span> <span class="n">maxInt</span> <span class="o">=</span> <span class="n">BigInt</span><span class="o">.</span><span class="na">from</span><span class="p">(</span><span class="mi">9223372036854775807</span><span class="p">);</span>
+<span class="n">BigInt</span> <span class="n">moreThenInt</span> <span class="o">=</span> <span class="n">maxInt</span> <span class="o">+</span> <span class="n">BigInt</span><span class="o">.</span><span class="na">parse</span><span class="p">(</span><span class="s">'12098679128739182365102983'</span><span class="p">);</span>
+<span class="n">print</span><span class="p">(</span><span class="n">moreThenInt</span><span class="p">);</span> <span class="c1">// 12098688352111219219878790</span>
+</code></pre></div></div>
+
+<p><strong><em>Strings</em></strong></p>
+
+<p>Strings in Dart <strong><em>are immutable</em></strong>, meaning that their contents cannot be changed after they have been created. Any additions or modifications to a string in your code result in the creation of a new string.</p>
+
+<p>The strings have variations: <a href="https://github.com/dart-lang/sdk/blob/e4e06c6cbd3aedc57148384592783f39c8edfd30/runtime/vm/object.h#L10531"><code class="language-plaintext highlighter-rouge">OneByteString</code></a> and <a href="https://github.com/dart-lang/sdk/blob/e4e06c6cbd3aedc57148384592783f39c8edfd30/runtime/vm/object.h#L10670"><code class="language-plaintext highlighter-rouge">TwoByteString</code></a>.</p>
+
+<p>The content of the string plays a role in choosing the implementation. If each character in the string is Latin and has a code unit from 0 to 255, then a <code class="language-plaintext highlighter-rouge">OneByteString</code> will be created because one byte can be allocated for each character of the string for storage. In all other cases, <code class="language-plaintext highlighter-rouge">TwoByteString</code> is used.</p>
+
+<p>If the characters in the string are more than two bytes (this can happen within UTF-32) it is decomposed into a surrogate pair.</p>
+
+<div class="language-dart highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">final</span> <span class="n">clef</span> <span class="o">=</span> <span class="kt">String</span><span class="o">.</span><span class="na">fromCharCodes</span><span class="p">([</span><span class="mh">0x1D11E</span><span class="p">]);</span>
+<span class="n">clef</span><span class="o">.</span><span class="na">codeUnitAt</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span> <span class="c1">// 0xD834</span>
+<span class="n">clef</span><span class="o">.</span><span class="na">codeUnitAt</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// 0xDD1E</span>
+</code></pre></div></div>
+
+<p>Strings also have size restrictions, these are MaxSmi / 2 = 2305843009213693951$
+.</p>
+
+<p><strong><em>Nulls and hashCodes</em></strong></p>
+
+<p>An interesting fact about <code class="language-plaintext highlighter-rouge">true</code>, <code class="language-plaintext highlighter-rouge">false</code> and <code class="language-plaintext highlighter-rouge">null</code> : their hash codes are predefined only in Dart VM.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Matches null_patch.dart / bool_patch.dart.</span>
+<span class="k">static</span> <span class="k">constexpr</span> <span class="kt">intptr_t</span> <span class="n">kNullIdentityHash</span> <span class="o">=</span> <span class="mi">2011</span><span class="p">;</span>
+<span class="k">static</span> <span class="k">constexpr</span> <span class="kt">intptr_t</span> <span class="n">kTrueIdentityHash</span> <span class="o">=</span> <span class="mi">1231</span><span class="p">;</span>
+<span class="k">static</span> <span class="k">constexpr</span> <span class="kt">intptr_t</span> <span class="n">kFalseIdentityHash</span> <span class="o">=</span> <span class="mi">1237</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p><a href="https://github.com/dart-lang/sdk/blob/e4e06c6cbd3aedc57148384592783f39c8edfd30/runtime/vm/object.h#L10791-L10794"><em>runtime/vm/object.h</em></a></p>
+
+<p>In patches for the web, the <code class="language-plaintext highlighter-rouge">hashCode</code> is defined by the <code class="language-plaintext highlighter-rouge">Object.hashCode</code>.</p>
+
+<div class="language-dart highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@patch</span>
+<span class="kd">class</span> <span class="nc">Null</span> <span class="p">{</span>
+  <span class="nd">@patch</span>
+  <span class="kt">int</span> <span class="kd">get</span> <span class="n">hashCode</span> <span class="o">=</span><span class="p">&gt;</span> <span class="k">super</span><span class="o">.</span><span class="na">hashCode</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><a href="https://github.com/dart-lang/sdk/blob/e4e06c6cbd3aedc57148384592783f39c8edfd30/sdk/lib/_internal/js_runtime/lib/core_patch.dart#L76-L81"><em>sdk/lib/_internal/js_runtime/lib/core_patch.dart</em></a></p>
+
+<p><em>Therefore, the hashСode values will be randomly generated, but will be strictly defined in the native code. However, this will not have any impact on the functionality of your code.</em></p>
+
+<h2 id="finally">Finally</h2>
+
+<p>We have studied how the built-in types are implemented in Dart, including their location and structure. We also looked at the differences and limitations that arise when working with them in different implementations. We saw how the patch system mechanism works and understand which libraries are available on the platform.</p>
+
+<p>If you want to continue studying in this direction, I recommend the following links:</p>
+
+<ul>
+  <li><a href="https://dart.dev/language/built-in-types">https://dart.dev/language/built-in-types</a> - Preview of built-in types.</li>
+  <li><a href="https://dart.dev/libraries/dart-core">https://dart.dev/libraries/dart-core</a> - Documentation about <code class="language-plaintext highlighter-rouge">dart:core</code>.</li>
+  <li><a href="https://github.com/dart-lang/sdk/tree/main/sdk/lib/_internal">https://github.com/dart-lang/sdk/tree/main/sdk/lib/_internal</a> - Patches.</li>
+  <li><a href="https://mrale.ph/dartvm/">https://mrale.ph/dartvm</a> - How the Dart VM is built and works.</li>
+</ul>
+
+<p>Also note that the patch system is used not only for built-in types, but also for asynchronous mechanism and event loop, work with isolates and so on.</p>
+
+<p>Many thanks to <strong>Manojlović Melanija</strong> for help in writing the article.</p>
+
+  </div><a class="u-url" href="/articles/2024/07/09/Dart-Built-in-types-under-the-hood.html" hidden></a>
+</article>
+    </div>
+  </main><footer class="site-footer h-card">
+
+</footer></body>
+
+</html>
