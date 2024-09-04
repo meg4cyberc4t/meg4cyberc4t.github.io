@@ -78,6 +78,13 @@ I have a list of tools that are most convenient for me to work with.
 </li>
 <li>
     <p>
+    <b>Virtualization:</b>
+    <a href='https://mac.getutm.app/'>UTM</a>,
+    <a href='https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion'>VMWare Fusion Pro</a>
+    </p>
+</li>
+<li>
+    <p>
     <b>Visual Studio Code Configurations:</b>
     <a href='{{ "/assets/configs/Flutter.code-profile" | relative_url }}' download>Flutter & Dart</a>,
     <a href='{{ "/assets/configs/Python.code-profile" | relative_url }}' download>Python</a>,
