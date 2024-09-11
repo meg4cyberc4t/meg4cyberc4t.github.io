@@ -372,8 +372,7 @@ clef.codeUnitAt(0); // 0xD834
 clef.codeUnitAt(1); // 0xDD1E
 ```
 
-Strings also have size restrictions, these are MaxSmi / 2 = 2305843009213693951$
-.
+Strings also have size restrictions, these are MaxSmi / 2 = 2305843009213693951.
 
 **_Nulls and hashCodes_**
 
