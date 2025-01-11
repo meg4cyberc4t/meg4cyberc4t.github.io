@@ -20,14 +20,23 @@ language constructs, team building, and public speaking.
 ~~Currently based in Moscow (+3 UTC), I'm available to answer work-related
 queries until midnight.~~
 
-<p style="color: red">I was called to military service until July 10, 2025.</p>
+<p style="color: red" id="timer-subtitle">
+    I was called to military service until July 10, 2025
+    <script>
+        var diff = Date.now() - new Date('07/10/2024');
+        var diffDays = Math.floor(Math.abs(diff / (24 * 60 * 60 * 1000)), 1);           
+        var percent = 100 / 365 * diffDays;
+        document.getElementById("timer-subtitle").innerHTML += `(${percent.toFixed(2)}%).`;
+    </script>
+</p>
+
 
 Feel free to explore my portfolio and reach out for collaborations or
 speaking engagements.
 
-<a href="setup.html">Work Setup</a>
+<a href="setup.html">~~Work Setup~~</a>
 <a> - </a>
-<a href='{{ "/assets/cv.pdf" | relative_url }}'>Curriculum Vitae</a>
+<a href='{{ "/assets/cv.pdf" | relative_url }}'>~~Curriculum Vitae~~</a>
 
 ## Articles
 
