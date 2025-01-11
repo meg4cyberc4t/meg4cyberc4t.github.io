@@ -24,9 +24,9 @@ queries until midnight.~~
     I was called to military service until July 10, 2025
     <script>
         var diff = Date.now() - new Date('07/10/2024');
-        var diffDays = Math.floor(Math.abs(diff / (24 * 60 * 60 * 1000)), 1);           
+        var diffDays = Math.abs(diff / (24 * 60 * 60 * 1000));           
         var percent = 100 / 365 * diffDays;
-        document.getElementById("timer-subtitle").innerHTML += `(${percent.toFixed(2)}%).`;
+        document.getElementById("timer-subtitle").innerHTML += `(${percent < 100 ? percent.toFixed(2) : "100.00"}%).`;
     </script>
 </p>
 
