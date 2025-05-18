@@ -38,7 +38,6 @@ I have a list of tools that are most convenient for me to work with.
 <li>
     <p>
     <b>Browsers:</b>
-    <a href="https://arc.net/">Arc</a>,
     <a href="https://www.google.com/chrome/">Google Chrome</a>
     </p>
 </li>
