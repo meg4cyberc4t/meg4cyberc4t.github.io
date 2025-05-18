@@ -23,10 +23,12 @@ queries until midnight.~~
 <p style="color: red" id="timer-subtitle">
     I was called to military service until July 10, 2025
     <script>
-        var diff = Date.now() - new Date('07/10/2024');
-        var diffDays = Math.abs(diff / (24 * 60 * 60 * 1000));           
-        var percent = 100 / 365 * diffDays;
-        document.getElementById("timer-subtitle").innerHTML += `(${percent < 100 ? percent.toFixed(2) : "100.00"}%).`;
+        const msInDay =  (24 * 60 * 60 * 1000);
+        var differenceFromStart = Date.now() - new Date('07/10/2024');
+        var percentFromStart = 100 / 365 * Math.abs(differenceFromStart / msInDay);
+        var daysToTheEnd = ((new Date('07/10/2025') - Date.now()) /  msInDay).toFixed(0);
+        var message = `(${percentFromStart < 100 ? percentFromStart.toFixed(2) : "100.00"}%, ${daysToTheEnd} days left).`;
+        document.getElementById("timer-subtitle").innerHTML += percentFromStart > 100 ? "<br />See you soon..." : message;
     </script>
 </p>
 
