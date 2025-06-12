@@ -1,0 +1,32 @@
+{{/* Header */}}
+
+<div class="header">
+    {{ if .IsHome }}
+    <h1 class="header-title">
+        <a href="{{ site.Home.RelPermalink }}">{{ site.Title }}</a>
+    </h1>
+    {{ else }}
+    <p class="header-title">
+        <a href="{{ site.Home.RelPermalink }}">{{ site.Title }}</a>
+    </p>
+    {{ end }}
+
+    <nav class="header-menu" aria-label="Primary navigation">
+        {{ $currentPage := . }}
+
+        {{ with site.Params.menu }}
+        {{ range . }}
+
+        {{ $menuURL := .url | relURL }}
+        {{ $currentURL := strings.TrimSuffix "/" $currentPage.RelPermalink }}
+        {{ $normalizedMenuURL := strings.TrimSuffix "/" $menuURL }}
+        {{ $isCurrent := eq $currentURL $normalizedMenuURL }}
+        <p class="small {{ if $isCurrent }}bold{{ end }}">
+            <a href="{{ $menuURL }}" {{ if $isCurrent }}aria-current="page"{{ end }} {{ if and (isset . "newTab" ) .newTab }}target="_blank" rel="noopener noreferrer"{{ end }}>
+                /{{.name }}
+            </a>
+        </p>
+        {{ end }}
+        {{ end }}
+    </nav>
+</div>

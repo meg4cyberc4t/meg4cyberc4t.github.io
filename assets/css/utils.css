@@ -1,0 +1,26 @@
+.flex {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.flexnowrap {
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.italic {
+    font-style: italic;
+}
+
+.small {
+    font-size: var(--small-font-size);
+    line-height: var(--small-line-height);
+}
+
+.monospace {
+    font-family: var(--font-mono);
+}

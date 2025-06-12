@@ -1,0 +1,23 @@
+{{- if .IsHome -}}
+  {{- with resources.Get "images/me-austria.png" -}}
+    {{- with .Resize "560x webp q84" -}}
+      {{- .Permalink -}}
+    {{- end -}}
+  {{- end -}}
+{{- else if .Params.ogImage -}}
+  {{- with .Resources.Get .Params.ogImage -}}
+    {{- if gt .Width 1200 -}}
+      {{- with .Resize "1200x webp q82" -}}
+        {{- .Permalink -}}
+      {{- end -}}
+    {{- else -}}
+      {{- with .Process "webp q82" -}}
+        {{- .Permalink -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- else if .IsPage -}}
+  {{- with resources.GetMatch "images/og-image.{webp,png,jpg}" -}}
+    {{- .Permalink -}}
+  {{- end -}}
+{{- end -}}

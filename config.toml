@@ -1,0 +1,77 @@
+baseURL = 'https://molchanovia.dev'
+locale = 'en-US'
+title = 'Igor Molchanov'
+enableRobotsTXT = true
+
+[taxonomies]
+tag = 'tags'
+
+[params]
+description = "A personal tech blog created and maintained by Igor Molchanov."
+footerContent = '© 2026 Igor Molchanov'
+
+hideHeader = false
+
+homeCollectionTitle = 'Articles'
+homeCollection = 'articles'
+
+paginationSize = 100
+listSummaries = true
+
+[params.breadcrumbs]
+enabled = true
+showCurrentPage = true
+home = "~"
+
+[[params.social]]
+name = "github"
+url = "https://github.com/meg4cyberc4t"
+
+[[params.social]]
+name = "linkedin"
+title = "LinkedIn"
+url = "https://www.linkedin.com/in/molchanovia/"
+
+[[params.social]]
+name = "telegram"
+url = "https://t.me/molchanovia"
+
+[[params.social]]
+name = "instagram"
+url = "https://www.instagram.com/molchanovia"
+
+[[params.social]]
+name = "rss"
+url = "/index.xml"
+
+[[params.social]]
+name = "gpg"
+title = "Download GPG public key"
+url = "/meg4cyberc4t-public-gpg.asc"
+download = true
+
+[[params.menu]]
+name = "home"
+url = "/"
+
+[[params.menu]]
+name = "tags"
+url = "/tags"
+
+[markup]
+[markup.highlight]
+style = 'solarized-light'
+
+[markup.goldmark.parser]
+wrapStandAloneImageWithinParagraph = false
+
+[outputFormats.LLMS]
+baseName = 'llms'
+isPlainText = true
+mediaType = 'text/plain'
+notAlternative = true
+root = true
+
+[outputs]
+home = ['HTML', 'RSS', 'LLMS']
+page = ['HTML', 'Markdown']
