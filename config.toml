@@ -1,0 +1,64 @@
+baseURL = 'https://molchanovia.dev'
+languageCode = 'en-us'
+title = 'Igor Molchanov'
+
+[taxonomies]
+tag = 'tags'
+
+[params]
+description = "A personal tech blog created and maintained by Igor Molchanov."
+
+hideHeader = false
+
+homeCollectionTitle = 'Articles'
+homeCollection = 'articles'
+
+paginationSize = 100
+listSummaries = true
+
+[params.breadcrumbs]
+enabled = true
+showCurrentPage = true
+home = "~"
+
+[[params.social]]
+name = "github"
+url = "https://github.com/meg4cyberc4t"
+
+[[params.social]]
+name = "telegram"
+url = "https://www.t.me/meg4cyberc4t"
+
+[[params.social]]
+name = "rss"
+url = "/index.xml"
+
+[[params.menu]]
+name = "home"
+url = "/"
+
+[[params.menu]]
+name = "tags"
+url = "/tags"
+
+[[params.menu]]
+name = "about"
+url = "/about"
+
+[[params.menu]]
+name = "contact"
+url = "/contact"
+
+[markup]
+[markup.highlight]
+style = 'solarized-light'
+
+[[deployment.matchers]]
+pattern = "^.+\\.(js|css|svg|ttf|woff2)$"
+cacheControl = "max-age=31536000, no-transform, public"
+gzip = true
+
+[[deployment.matchers]]
+pattern = "^.+\\.(png|jpg|gif|webp)$"
+cacheControl = "max-age=31536000, no-transform, public"
+gzip = false

@@ -1,0 +1,7 @@
+<div style="--code-margin-bottom: 0">
+    {{ .Inner | markdownify }}
+    <p style="text-align: center; font-style: italic; color: var(--code-alt); font-size: medium;">
+        <a href='{{ .Get "link" }}'>{{ .Get "src" }} </a>
+        {{- if .Get "caption" -}} – {{ .Get "caption" | markdownify }}{{- end -}}
+    </p>
+</div>
