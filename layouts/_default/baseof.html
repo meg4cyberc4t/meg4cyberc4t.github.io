@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="{{ or site.Language.Locale site.Language.Lang }}"
+  dir="{{ or site.Language.Direction `ltr` }}">
+
+<head>
+  {{ partial "head.html" . }}
+</head>
+
+{{ $theme := "auto"}}
+
+{{ with .Param "theme" }}
+{{ $theme = .}}
+{{ end }}
+
+<body class="{{ $theme }}" id="top">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <div class="content">
+    <header>
+      {{ partial "header.html" . }}
+    </header>
+
+    <main class="main" id="main-content">
+      {{ block "main" . }}{{ end }}
+    </main>
+  </div>
+
+  {{/* Body end hook */}}
+  {{ partial "functions/get_hook.html" (dict "hook" "body_end" "context" .) }}
+
+  {{ with site.Params.footerContent }}
+  <footer>
+    {{ partial "footer.html" $ }}
+  </footer>
+  {{ end }}
+
+  {{ if .Param "math" }}
+  {{ partialCached "math.html" . }}
+  {{ end }}
+
+  {{ if hugo.IsProduction }}
+  {{ partial "analytics-noscript.html" . }}
+  {{ end }}
+
+  <script defer src="{{ "js/copy-code.js" | relURL }}"></script>
+  {{ if .IsHome }}
+  <script defer src="{{ "js/portrait-tilt.js" | relURL }}"></script>
+  {{ end }}
+</body>
+
+</html>

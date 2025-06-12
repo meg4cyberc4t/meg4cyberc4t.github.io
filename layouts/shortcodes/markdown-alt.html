@@ -1,0 +1,7 @@
+<div class="code-example">
+    {{ .Inner | markdownify }}
+    <p class="code-caption">
+        <a href='{{ .Get "link" }}'>{{ .Get "src" }} </a>
+        {{- if .Get "caption" -}} – {{ .Get "caption" | markdownify }}{{- end -}}
+    </p>
+</div>

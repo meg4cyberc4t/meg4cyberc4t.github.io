@@ -1,0 +1,55 @@
+:root {
+    --content-primary: #302622;
+    --content-secondary: #756a63;
+    --accent-primary: #9b4f32;
+    --accent-secondary: #673521;
+    --background: #e7ddd1;
+    --background-secondary: #d8c8b8;
+    --surface: #f3ece3;
+    --stone: #c8b7a5;
+    --sky: #8fb5c5;
+    --sky-wash: rgba(132, 180, 199, 0.48);
+    --shadow: rgba(73, 48, 35, 0.16);
+    --code-background: #ebe4da;
+    --code-border: #d8cdc0;
+    --code-alt: #756a63;
+    color-scheme: light;
+}
+
+body.dark {
+    --content-primary: #f2e9df;
+    --content-secondary: #bcaea3;
+    --accent-primary: #e2a080;
+    --accent-secondary: #f0c0a6;
+    --background: #1c1816;
+    --background-secondary: #2b211c;
+    --surface: #27211d;
+    --stone: #594a41;
+    --sky: #85aaba;
+    --sky-wash: rgba(76, 126, 148, 0.28);
+    --shadow: rgba(0, 0, 0, 0.32);
+    --code-background: #28221e;
+    --code-border: #4a3d35;
+    --code-alt: #c3b5aa;
+    color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+    body.auto {
+        --content-primary: #f2e9df;
+        --content-secondary: #bcaea3;
+        --accent-primary: #e2a080;
+        --accent-secondary: #f0c0a6;
+        --background: #1c1816;
+        --background-secondary: #2b211c;
+        --surface: #27211d;
+        --stone: #594a41;
+        --sky: #85aaba;
+        --sky-wash: rgba(76, 126, 148, 0.28);
+        --shadow: rgba(0, 0, 0, 0.32);
+        --code-background: #28221e;
+        --code-border: #4a3d35;
+        --code-alt: #c3b5aa;
+        color-scheme: dark;
+    }
+}

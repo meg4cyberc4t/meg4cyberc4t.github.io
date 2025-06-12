@@ -1,0 +1,64 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+{{/* Head start hook */}}
+{{ partial "functions/get_hook.html" (dict "hook" "head_start" "context" .) }}
+
+{{ $faviconPath := (.Site.Params.faviconPath | default "" | absURL) }}
+
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self' https://github.com; script-src 'self' https://www.googletagmanager.com https://*.googletagmanager.com https://mc.yandex.ru https://mc.yandex.com https://*.yandex.ru https://*.yandex.com https://yastatic.net https://giscus.app https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https://*.google-analytics.com https://*.googletagmanager.com https://mc.yandex.ru https://mc.yandex.com https://*.yandex.ru https://*.yandex.com https://giscus.app; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://mc.yandex.ru https://mc.yandex.com https://*.yandex.ru https://*.yandex.com https://giscus.app; frame-src https://giscus.app; font-src 'self' data: https://cdn.jsdelivr.net; worker-src 'self' blob:; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="color-scheme" content="light dark">
+{{- if eq .Kind "404" }}
+<meta name="robots" content="noindex, nofollow">
+{{- end }}
+<link rel="icon" type="image/ico" href='{{ urls.JoinPath $faviconPath "favicon.ico" }}'>
+<link rel="icon" type="image/png" sizes="16x16" href='{{ urls.JoinPath $faviconPath "favicon-16x16.png" }}'>
+<link rel="icon" type="image/png" sizes="32x32" href='{{ urls.JoinPath $faviconPath "favicon-32x32.png" }}'>
+<link rel="icon" type="image/png" sizes="192x192" href='{{ urls.JoinPath $faviconPath "android-chrome-192x192.png" }}'>
+<link rel="apple-touch-icon" sizes="180x180" href='{{ urls.JoinPath $faviconPath "apple-touch-icon.png" }}'>
+
+{{ with .OutputFormats.Get "rss" -}}
+{{ printf `
+<link rel=%q type=%q href=%q title=%q>` .Rel .MediaType.Type .Permalink site.Title | safeHTML }}
+{{ end }}
+
+<meta name="description" content="{{ .Description | default site.Params.Description | plainify }}">
+
+{{ if .Param "fediverse" }}
+<meta name="fediverse:creator" content="{{ .Params.Fediverse }}">
+{{ end }}
+
+<title>
+    {{ if .IsHome }}
+    {{ site.Title }}
+    {{ else }}
+    {{ printf "%s | %s" .Title site.Title }}
+    {{ end }}
+</title>
+
+<link rel="canonical" href="{{ .Permalink }}" />
+<link rel="describedby" href="{{ "llms.txt" | absURL }}" type="text/markdown">
+{{ with .OutputFormats.Get "Markdown" }}
+<link rel="alternate" href="{{ .Permalink }}" type="text/markdown" title="{{ $.Title }} as Markdown">
+{{ end }}
+
+{{ template "partials/opengraph.html" . }}
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="{{ cond .IsHome site.Title (printf "%s | %s" .Title site.Title) }}">
+<meta name="twitter:description" content="{{ .Description | default site.Params.Description | plainify }}">
+{{- with partial "head/og-image.html" . }}
+<meta name="twitter:image" content="{{ . }}">
+{{- end }}
+
+{{ partialCached "head/css.html" . }}
+{{ partialCached "head/js.html" . }}
+
+{{ if hugo.IsProduction }}
+<!-- Google Analytics -->
+<script src="{{ "js/analytics.js" | relURL }}"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-P76YQ00W05"></script>
+{{ end }}
+
+{{/* Head end hook */}}
+{{ partial "functions/get_hook.html" (dict "hook" "head_end" "context" .) }}

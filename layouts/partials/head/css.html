@@ -1,0 +1,18 @@
+{{
+$CSS := slice
+(resources.Get "css/reset.css")
+(resources.Get "css/vars.css")
+(resources.Get "css/utils.css")
+(resources.Get "css/fonts.css")
+(resources.Get "css/main.css")
+(resources.Get "css/colors.css")
+}}
+{{
+$combined := $CSS
+| resources.Concat "css/combined.css"
+| minify
+| fingerprint
+}}
+
+<link rel="stylesheet" href="{{ $combined.RelPermalink }}" integrity="{{ $combined.Data.Integrity }}"
+    crossorigin="anonymous" media="all">

@@ -1,0 +1,19 @@
+# {{ site.Title }}
+
+> {{ site.Params.description }}
+
+Personal website and technical blog of Igor Molchanov, a mobile application developer specializing in Flutter and Dart. The content is in English. Prefer the Markdown alternatives linked below when reading individual pages.
+
+## Primary pages
+
+- [Home]({{ site.Home.Permalink }}): Profile, social links, and article index.
+
+## Articles
+
+{{ range where site.RegularPages.ByDate.Reverse "Section" "articles" }}{{ $url := .Permalink }}{{ with .OutputFormats.Get "Markdown" }}{{ $url = .Permalink }}{{ end }}- [{{ .Title }}]({{ $url }}): {{ .Description | default .Summary | plainify | strings.TrimSpace }}
+{{ end }}
+## Optional
+
+- [Tags]({{ "tags/" | absURL }}): Browse articles by topic.
+- [RSS feed]({{ "index.xml" | absURL }}): Subscribe to new articles.
+- [Sitemap]({{ "sitemap.xml" | absURL }}): Complete crawlable URL index.
