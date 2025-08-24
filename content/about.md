@@ -13,3 +13,5 @@ Started out doing a bit of everything — from building bots and RESTful web-ser
 Nowadays, **my main focus is developing cross-platform apps with Flutter**. 
 
 In my free time, I like to dive into algorithms, how compilers work, and the basics of programming language design.
+
+If you are interested in working with me, here is my [resume](/resume/en.pdf) [(RU)](/resume/ru.pdf).
